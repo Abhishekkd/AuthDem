@@ -26,7 +26,7 @@ app.get('/', (req,res)=>{
     res.send("This is the Homepage!!")
 })
 
-//our user registration  form
+//our user registration/sign up form
 app.get('/register', (req,res)=>{
     res.render('register')
 })
@@ -45,6 +45,24 @@ app.post('/register',async(req,res)=>{
     })
     await user.save();
     res.redirect('/');
+})
+
+//get login form
+app.get('/login',(req,res)=>{
+    res.render('login')
+})
+//submitting login data
+app.post('/login',async(req,res)=>{
+    const {username,password} = req.body;
+    //we'll find the user with this username as we dont have any id and thats why username should always be unique
+   const user = await User.findOne({username}) ;// it means where ({username:username})
+    //after finding what we wanna do is compare the password that we have in the req.body to the hashed password on this user
+    const validPassword = await bcrypt.compare(password,user.password);
+    if(validPassword){
+        res.send('Welcome!!')
+    } else{
+        res.send('incorrect!!')
+    }
 })
 
 //basic route which eventually going to be secret 
