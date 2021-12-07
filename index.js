@@ -3,6 +3,7 @@ const app = express();
 const User = require('./models/user');
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
+const session = require('express-session');
 
 //connecting mongo with mongoose
 // database is named farmStand where our collections will be stored and will be created for us
@@ -21,6 +22,7 @@ app.set('view engine', 'ejs');
 app.set('views','views');
 //to have access to req.body after it being parsed
 app.use(express.urlencoded({extended:true}));
+app.use(session({secret: ' useABetterSecret'}))
 
 app.get('/', (req,res)=>{
     res.send("This is the Homepage!!")
@@ -43,6 +45,7 @@ app.post('/register',async(req,res)=>{
         username,
         password:hash
     })
+    //after successfully logging in we'll add your user_id to session
     await user.save();
     res.redirect('/');
 })
@@ -59,15 +62,19 @@ app.post('/login',async(req,res)=>{
     //after finding what we wanna do is compare the password that we have in the req.body to the hashed password on this user
     const validPassword = await bcrypt.compare(password,user.password);
     if(validPassword){
-        res.send('Welcome!!')
+        req.session.user_id = user._id;
+        res.redirect('/secret')
     } else{
-        res.send('incorrect!!')
+        res.redirect('/login')
     }
 })
 
 //basic route which eventually going to be secret 
 app.get('/secret',(req,res)=>{
-    res.send("U Are Logged In!!")
+    if(!req.session.user_id){
+        res.redirect('/login');
+    }
+    res.send("This is a secret u can only access!!")
 })
 
 
