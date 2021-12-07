@@ -24,6 +24,18 @@ app.set('views','views');
 app.use(express.urlencoded({extended:true}));
 app.use(session({secret: ' useABetterSecret'}))
 
+//login middleware
+//instead of using app.use and always applying this middleware we.ll define a custom middleware function
+const requireLogin = (req,res,next)=>{
+    if(!req.session.user_id){
+       //if not logged in login first
+        return res.redirect('/login');         //or we could have just used else here instead of using return
+
+    }
+    next();
+}
+
+
 app.get('/', (req,res)=>{
     res.send("This is the Homepage!!")
 })
@@ -68,15 +80,20 @@ app.post('/login',async(req,res)=>{
         res.redirect('/login')
     }
 })
-
-//basic route which eventually going to be secret 
-app.get('/secret',(req,res)=>{
-    if(!req.session.user_id){
-        res.redirect('/login');
-    }
-    res.send("This is a secret u can only access!!")
+//route for logging out
+app.post('/logout',(req,res)=>{
+    //removing user_id
+    req.session.user_id = null;
+    res.redirect('/login')
 })
 
+//basic route which eventually going to be secret 
+app.get('/secret',requireLogin,(req,res)=>{
+        res.render('secret');
+})
+app.get('/anotherOne',requireLogin,(req,res)=>{
+    res.send("Here's Another Secret")
+})
 
 //to set up our server up
 app.listen(3000,()=>{
